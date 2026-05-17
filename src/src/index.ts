@@ -13,14 +13,6 @@ export type {
   TelemetryEvent,
 } from './types'
 
-/**
- * Drop-in replacement for DataLoader with telemetry and AI-tuned batch sizing.
- *
- * Note on maxBatchSize: DataLoader reads this once at construction time. The
- * optimizer tracks the ideal size and surfaces it via getMetrics() and the
- * dashboard API — apply the recommendation on your next deployment or restart.
- * Real-time in-process adjustment is on the roadmap.
- */
 class DataLoaderAI<K, V, C = K> {
   private readonly _loader: DataLoader<K, V, C>
   private readonly _agent: MetricsAgent | null
@@ -46,18 +38,18 @@ class DataLoaderAI<K, V, C = K> {
     const cacheMap = options?.cache === false
       ? null
       : new InstrumentedCacheMap<C, Promise<V>>(
-          options?.cacheMap ?? new Map<C, Promise<V>>(),
-          () => {
-            self._cacheHits++
-            self._totalLoads++
-            agent?.record({ type: 'cache_hit', timestamp: Date.now(), loaderName: self._name })
-          },
-          () => {
-            self._cacheMisses++
-            self._totalLoads++
-            agent?.record({ type: 'cache_miss', timestamp: Date.now(), loaderName: self._name })
-          }
-        )
+        options?.cacheMap ?? new Map<C, Promise<V>>(),
+        () => {
+          self._cacheHits++
+          self._totalLoads++
+          agent?.record({ type: 'cache_hit', timestamp: Date.now(), loaderName: self._name })
+        },
+        () => {
+          self._cacheMisses++
+          self._totalLoads++
+          agent?.record({ type: 'cache_miss', timestamp: Date.now(), loaderName: self._name })
+        }
+      )
 
     const wrappedBatchFn: DataLoader.BatchLoadFn<K, V> = async (keys) => {
       const start = Date.now()
@@ -125,11 +117,13 @@ class DataLoaderAI<K, V, C = K> {
     const total = this._cacheHits + this._cacheMisses
     const cacheHitRate = total > 0 ? this._cacheHits / total : 0
     const currentBatchSize = this._optimizer.getBatchSize()
+    const recommendedBatchSize = this._optimizer.getBatchSize()
     const avgLatencyMs = this._optimizer.getAvgLatency()
+    const p95LatencyMs = this._optimizer.getP95Latency()
     const estimatedCostSavings = this._cacheHits * 0.0001
 
     if (this._agent) {
-      return this._agent.getSummary(this._name, currentBatchSize)
+      return this._agent.getSummary(this._name, currentBatchSize, recommendedBatchSize)
     }
 
     return {
@@ -140,7 +134,9 @@ class DataLoaderAI<K, V, C = K> {
       cacheMisses: this._cacheMisses,
       cacheHitRate,
       avgLatencyMs,
+      p95LatencyMs,
       currentBatchSize,
+      recommendedBatchSize,
       estimatedCostSavings,
     }
   }

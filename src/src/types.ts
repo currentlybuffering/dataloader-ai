@@ -14,7 +14,9 @@ export interface MetricsSummary {
   cacheMisses: number
   cacheHitRate: number
   avgLatencyMs: number
+  p95LatencyMs: number
   currentBatchSize: number
+  recommendedBatchSize: number
   estimatedCostSavings: number
 }
 
@@ -24,6 +26,8 @@ export interface AgentConfig {
   apiKey?: string
   flushIntervalMs?: number
   maxBufferSize?: number
+  maxRetries?: number
+  fetchTimeoutMs?: number
 }
 
 export interface OptimizerConfig {
@@ -31,6 +35,7 @@ export interface OptimizerConfig {
   minBatchSize?: number
   maxBatchSize?: number
   windowSize?: number
+  onBatchSizeChange?: (oldSize: number, newSize: number, reason: string) => void
 }
 
 export interface DataLoaderAIOptions {

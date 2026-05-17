@@ -13,48 +13,59 @@ npm install dataloader-ai
 ## Usage
 
 ```ts
-// before
-import DataLoader from 'dataloader'
-const userLoader = new DataLoader(batchLoadUsers)
-
-// after
 import { DataLoaderAI } from 'dataloader-ai'
+
 const userLoader = new DataLoaderAI(batchLoadUsers, {
   name: 'user',
-  agent: {
-    endpoint: 'https://api.dataloader-ai.com',
-    apiKey: process.env.DL_API_KEY,
-  },
 })
 
 // same load/loadMany API
 const user = await userLoader.load(userId)
 ```
 
+Set `DL_API_KEY` as an environment variable and it just works — the endpoint defaults to `https://api.dataloader-ai.com`.
+
+```bash
+export DL_API_KEY=your-key-here
+```
+
 ## What it tracks
 
 - **Batch size** — per loader, per dispatch
 - **Cache hit rate** — hits vs misses via instrumented cache map
-- **Latency** — how long each batch function takes
+- **Latency** — avg and p95 for each batch function
 - **Recommendations** — increase, decrease, or hold batch size based on observed latency
+- **Cost savings** — estimated savings from cache hits and batching
 
 ## Options
 
 ```ts
 new DataLoaderAI(batchLoadFn, {
-  name: 'user',                          // loader name for dashboard
+  name: 'user',
   agent: {
-    endpoint: 'https://api.dataloader-ai.com',
-    apiKey: process.env.DL_API_KEY,
-    enabled: true,                        // set false to disable telemetry
-    flushIntervalMs: 5000,                // how often to send events
+    apiKey: process.env.DL_API_KEY, // or set DL_API_KEY env var
+    enabled: true,                  // set false to disable telemetry
+    flushIntervalMs: 5000,          // how often to send events
+    maxRetries: 3,                  // retry on network failure
+    fetchTimeoutMs: 5000,           // HTTP request timeout
   },
   optimizer: {
-    initialBatchSize: 10,                 // starting batch size
-    targetLatencyMs: 50,                  // latency target for recommendations
+    targetLatencyMs: 50,            // latency target for recommendations
+    minBatchSize: 1,
+    maxBatchSize: 1000,
+    onBatchSizeChange: (oldSize, newSize, reason) => {
+      console.log(`batch size: ${oldSize} → ${newSize} — ${reason}`)
+    },
   },
 })
 ```
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `DL_API_KEY` | API key for the dashboard (required for telemetry) |
+| `DL_ENDPOINT` | Override the ingest endpoint (default: `https://api.dataloader-ai.com`) |
 
 ## API
 
@@ -65,9 +76,15 @@ new DataLoaderAI(batchLoadFn, {
 | `clear(key)` | Same as DataLoader |
 | `clearAll()` | Same as DataLoader |
 | `prime(key, value)` | Same as DataLoader |
-| `getMetrics()` | Returns current loader stats |
+| `getMetrics()` | Returns current loader stats including p95 latency |
 | `recommendedBatchSize` | Current optimizer recommendation |
 | `destroy()` | Flushes pending events and cleans up |
+
+## Reliability
+
+- Failed flushes retry with exponential backoff (3 attempts by default)
+- Pending events flush on SIGTERM/SIGINT before process exit
+- Agent failures never crash your application
 
 ## Beta
 
