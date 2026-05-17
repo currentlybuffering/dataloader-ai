@@ -5,6 +5,7 @@ const DEFAULT_FLUSH_MS = 5000
 const DEFAULT_MAX_BUFFER = 100
 const DEFAULT_MAX_RETRIES = 3
 const DEFAULT_FETCH_TIMEOUT_MS = 5000
+const DEFAULT_HEARTBEAT_MS = 30000
 const RETRY_BASE_DELAY_MS = 1000
 
 function _env(key: string, fallback?: string): string | undefined {
@@ -28,6 +29,7 @@ export class MetricsAgent {
   private readonly maxRetries: number
   private readonly fetchTimeoutMs: number
   private flushTimer: ReturnType<typeof setInterval> | null = null
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null
   private destroyed = false
   private flushing = false
 
@@ -56,6 +58,13 @@ export class MetricsAgent {
     if (this.flushTimer && typeof (this.flushTimer as NodeJS.Timeout).unref === 'function') {
       (this.flushTimer as NodeJS.Timeout).unref()
     }
+
+    const hbInterval = config.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_MS
+    this.heartbeatTimer = setInterval(() => void this._heartbeat(), hbInterval)
+    if (this.heartbeatTimer && typeof (this.heartbeatTimer as NodeJS.Timeout).unref === 'function') {
+      (this.heartbeatTimer as NodeJS.Timeout).unref()
+    }
+    void this._heartbeat()
 
     if (typeof process !== 'undefined' && typeof process.on === 'function') {
       const shutdown = () => { this.destroy() }
@@ -118,7 +127,27 @@ export class MetricsAgent {
       clearInterval(this.flushTimer)
       this.flushTimer = null
     }
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = null
+    }
     void this.flush()
+  }
+
+  private async _heartbeat(): Promise<void> {
+    if (!this.endpoint || !this.apiKey) return
+    try {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+      const timeout = controller
+        ? setTimeout(() => controller.abort(), this.fetchTimeoutMs)
+        : null
+      await fetch(`${this.endpoint}/heartbeat`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+        signal: controller?.signal,
+      })
+      if (timeout) clearTimeout(timeout)
+    } catch {}
   }
 
   private async flush(): Promise<void> {

@@ -28,6 +28,7 @@ export interface AgentConfig {
   maxBufferSize?: number
   maxRetries?: number
   fetchTimeoutMs?: number
+  heartbeatIntervalMs?: number
 }
 
 export interface OptimizerConfig {
