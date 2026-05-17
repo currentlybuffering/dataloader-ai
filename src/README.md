@@ -53,6 +53,7 @@ const userLoader = new DataLoaderAI(batchLoadUsers, { name: 'user' })
 | `agent.maxBufferSize` | number | `100` | Flush early when buffer reaches this size |
 | `agent.maxRetries` | number | `3` | Retry attempts on network failure |
 | `agent.fetchTimeoutMs` | number | `5000` | HTTP request timeout |
+| `agent.heartbeatIntervalMs` | number | `30000` | How often to send a heartbeat to the API |
 | `optimizer.targetLatencyMs` | number | `50` | Latency target the optimizer aims for |
 | `optimizer.minBatchSize` | number | `1` | Floor for batch size |
 | `optimizer.maxBatchSize` | number | `1000` | Ceiling for batch size |
@@ -101,6 +102,7 @@ See [`examples/apollo-server.ts`](./examples/apollo-server.ts).
 - surfaces batch-size recommendations through the API and local metrics
 - retries failed flushes with exponential backoff (3 attempts)
 - flushes remaining events on SIGTERM/SIGINT
+- sends periodic heartbeats so the admin dashboard shows active connections
 - applies recommended batch size on next process restart, not live in-process
 
 ## Architecture
