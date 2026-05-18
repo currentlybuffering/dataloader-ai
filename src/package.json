@@ -1,6 +1,6 @@
 {
   "name": "dataloader-ai",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Telemetry and tuning for GraphQL DataLoaders",
   "homepage": "https://dataloader-ai.com",
   "main": "dist/cjs/index.js",
@@ -27,11 +27,10 @@
   },
   "keywords": ["graphql", "dataloader", "batching", "performance", "ai", "apollo"],
   "license": "MIT",
-  "dependencies": {
-    "dataloader": "^2.2.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "dataloader": "^2.2.2",
     "typescript": "^5.5.0"
   },
   "peerDependencies": {

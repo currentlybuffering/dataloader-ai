@@ -59,12 +59,16 @@ export class MetricsAgent {
       (this.flushTimer as NodeJS.Timeout).unref()
     }
 
-    const hbInterval = config.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_MS
-    this.heartbeatTimer = setInterval(() => void this._heartbeat(), hbInterval)
-    if (this.heartbeatTimer && typeof (this.heartbeatTimer as NodeJS.Timeout).unref === 'function') {
-      (this.heartbeatTimer as NodeJS.Timeout).unref()
-    }
-    void this._heartbeat()
+  const hbInterval = config.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_MS
+  this.heartbeatTimer = setInterval(() => void this._heartbeat(), hbInterval)
+  if (this.heartbeatTimer && typeof (this.heartbeatTimer as NodeJS.Timeout).unref === 'function') {
+    (this.heartbeatTimer as NodeJS.Timeout).unref()
+  }
+
+  const dlEnv = _env('DL_ENV')
+  if (dlEnv !== 'development' && dlEnv !== 'test') {
+    setTimeout(() => void this._heartbeat(), hbInterval)
+  }
 
     if (typeof process !== 'undefined' && typeof process.on === 'function') {
       const shutdown = () => { this.destroy() }
@@ -74,8 +78,6 @@ export class MetricsAgent {
   }
 
   record(event: TelemetryEvent): void {
-    this.buffer.push(event)
-
     switch (event.type) {
       case 'batch':
         this.totalBatched += event.batchSize ?? 1
@@ -90,6 +92,10 @@ export class MetricsAgent {
         this.cacheMisses++
         break
     }
+
+    if (!this.apiKey) return
+
+    this.buffer.push(event)
 
     if (this.buffer.length >= this.maxBufferSize) {
       void this.flush()
@@ -175,18 +181,24 @@ export class MetricsAgent {
           signal: controller?.signal,
         })
 
-        if (timeout) clearTimeout(timeout)
+      if (timeout) clearTimeout(timeout)
 
-        if (res.ok || res.status === 202) return
-        if (res.status >= 400 && res.status < 500) return
-      } catch {
-        if (attempt < this.maxRetries) {
-          await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)))
-          continue
-        }
+      if (res.ok || res.status === 202) {
+        this.flushing = false
+        return
+      }
+      if (res.status >= 400 && res.status < 500) {
+        this.flushing = false
+        return
+      }
+    } catch {
+      if (attempt < this.maxRetries) {
+        await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)))
+        continue
       }
     }
+  }
 
-    this.flushing = false
+  this.flushing = false
   }
 }

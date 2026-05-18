@@ -8,6 +8,7 @@ export class BatchSizeOptimizer {
   private readonly windowSize: number
   private readonly onBatchSizeChange?: (oldSize: number, newSize: number, reason: string) => void
   private currentBatchSize: number
+  private adjustCounter = 0
 
   constructor(config: OptimizerConfig = {}) {
     this.targetLatencyMs = config.targetLatencyMs ?? 50
@@ -23,7 +24,8 @@ export class BatchSizeOptimizer {
     if (this.latencies.length > this.windowSize) {
       this.latencies.shift()
     }
-    if (this.latencies.length >= 3) {
+    this.adjustCounter++
+    if (this.latencies.length >= 3 && this.adjustCounter % 5 === 0) {
       this.adjust()
     }
   }

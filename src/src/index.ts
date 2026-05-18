@@ -28,13 +28,23 @@ class DataLoaderAI<K, V, C = K> {
     options?: DataLoader.Options<K, V, C> & DataLoaderAIOptions
   ) {
     this._name = options?.name ?? 'default'
-    this._optimizer = new BatchSizeOptimizer(options?.optimizer)
+    const userOnBatchSizeChange = options?.optimizer?.onBatchSizeChange
+    this._optimizer = new BatchSizeOptimizer({
+      ...options?.optimizer,
+      onBatchSizeChange: (oldSize: number, newSize: number, reason: string) => {
+        if (loaderRef.current) {
+          (loaderRef.current as any)._maxBatchSize = newSize
+        }
+        userOnBatchSizeChange?.(oldSize, newSize, reason)
+      },
+    })
     const agentConfig = options?.agent
     this._agent = agentConfig && agentConfig.enabled !== false ? new MetricsAgent(agentConfig) : null
 
     const optimizer = this._optimizer
     const agent = this._agent
     const self = this
+    const loaderRef = { current: null as DataLoader<K, V, C> | null }
     const cacheMap = options?.cache === false
       ? null
       : new InstrumentedCacheMap<C, Promise<V>>(
@@ -88,6 +98,7 @@ class DataLoaderAI<K, V, C = K> {
       cacheMap,
       maxBatchSize: this._optimizer.getBatchSize(),
     })
+    loaderRef.current = this._loader
   }
 
   load(key: K): Promise<V> {
@@ -117,10 +128,10 @@ class DataLoaderAI<K, V, C = K> {
     const total = this._cacheHits + this._cacheMisses
     const cacheHitRate = total > 0 ? this._cacheHits / total : 0
     const currentBatchSize = this._optimizer.getBatchSize()
-    const recommendedBatchSize = this._optimizer.getBatchSize()
     const avgLatencyMs = this._optimizer.getAvgLatency()
     const p95LatencyMs = this._optimizer.getP95Latency()
     const estimatedCostSavings = this._cacheHits * 0.0001
+    const recommendedBatchSize = currentBatchSize
 
     if (this._agent) {
       return this._agent.getSummary(this._name, currentBatchSize, recommendedBatchSize)
@@ -158,13 +169,20 @@ class InstrumentedCacheMap<K, V> implements DataLoader.CacheMap<K, V> {
   ) {}
 
   get(key: K): V | void {
-    const value = this.base.get(key)
-    if (value === undefined) {
+    const baseAny = this.base as any
+    const has = typeof baseAny.has === 'function' ? baseAny.has(key) : this.base.get(key) !== undefined
+    if (!has) {
       this.onMiss()
-      return value
+      return undefined
     }
     this.onHit()
-    return value
+    return this.base.get(key)
+  }
+
+  has(key: K): boolean {
+    const baseAny = this.base as any
+    if (typeof baseAny.has === 'function') return baseAny.has(key)
+    return this.base.get(key) !== undefined
   }
 
   set(key: K, value: V): this {
