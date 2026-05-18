@@ -19,18 +19,27 @@
       }
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc && tsc -p tsconfig.esm.json && node scripts/fix-esm.mjs",
     "dev": "tsc --watch",
     "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
-  "keywords": ["graphql", "dataloader", "batching", "performance", "ai", "apollo"],
+  "keywords": [
+    "graphql",
+    "dataloader",
+    "batching",
+    "performance",
+    "ai",
+    "apollo"
+  ],
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
     "dataloader": "^2.2.2",
+    "tsx": "^4.22.2",
     "typescript": "^5.5.0"
   },
   "peerDependencies": {

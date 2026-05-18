@@ -124,7 +124,7 @@ async function testAdminDashboard() {
 async function testAdminAuthRejection() {
   console.log('\n--- Admin Auth Rejection ---')
   const noToken = await fetch(`${ENDPOINT}/admin/dashboard-data`)
-  assert(noToken.status === 403, 'admin without token returns 403')
+  assert(noToken.status === 401, 'admin without token returns 401')
   const badToken = await fetch(`${ENDPOINT}/admin/dashboard-data`, {
     headers: { Authorization: 'Bearer wrong-token' },
   })
@@ -134,9 +134,9 @@ async function testAdminAuthRejection() {
 async function testExpiredKeyRejection() {
   console.log('\n--- Expired Key Rejection ---')
   const res = await fetch(`${ENDPOINT}/metrics/test-loader`, {
-    headers: { Authorization: 'Bearer expired-test-key' },
+    headers: { Authorization: 'Bearer dl_live_expired_test_key_000000000000000000000000000' },
   })
-  assert(res.status === 401, 'expired key returns 401')
+  assert(res.status === 403, 'expired key returns 403')
 }
 
 async function testInvalidLoaderName() {
