@@ -3,6 +3,14 @@
 Telemetry and tuning for GraphQL DataLoaders.
 A drop-in replacement for the standard `dataloader` npm package.
 
+## Beta access
+
+dataloader-ai is in open beta. Get a free API key with 90-day access:
+
+**[Request beta access →](https://dataloader-ai.com/#waitlist)**
+
+Without an API key, the SDK still works — it tracks metrics locally via `loader.getMetrics()`. With a key, you get the hosted dashboard, live telemetry, and batch-size recommendations.
+
 ## Install
 
 ```bash
@@ -67,7 +75,9 @@ const userLoader = new DataLoaderAI(batchLoadUsers, { name: 'user' })
 | `DL_API_KEY` | API key for the dashboard (required for telemetry) |
 | `DL_ENDPOINT` | Override the ingest endpoint (default: `https://api.dataloader-ai.com`) |
 
-## Local metrics (no backend required)
+## Local metrics (no API key required)
+
+Works without a key — telemetry stays local:
 
 ```typescript
 const loader = new DataLoaderAI(batchFn, {
@@ -77,6 +87,8 @@ const loader = new DataLoaderAI(batchFn, {
 
 console.log(loader.getMetrics())
 ```
+
+**Want the hosted dashboard?** [Request a free beta API key →](https://dataloader-ai.com/#waitlist)
 
 ## Batch size change callback
 
