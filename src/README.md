@@ -1,15 +1,18 @@
 # dataloader-ai
 
 Telemetry and tuning for GraphQL DataLoaders.
-A drop-in replacement for the standard `dataloader` npm package.
+A drop-in wrapper for the `dataloader` npm package.
 
-## Beta access
+## Get your free API key
 
-dataloader-ai is in open beta. Get a free API key with 90-day access:
+**Get a key instantly — no waiting:** [dataloader-ai.com/#waitlist](https://dataloader-ai.com/#waitlist)
 
-**[Request beta access →](https://dataloader-ai.com/#waitlist)**
+```bash
+export DL_API_KEY=your-key-here
+```
 
-Without an API key, the SDK still works — it tracks metrics locally via `loader.getMetrics()`. With a key, you get the hosted dashboard, live telemetry, and batch-size recommendations.
+With a key you get: hosted dashboard, live telemetry, batch-size recommendations, cost savings tracking.
+Without a key: local metrics only via `loader.getMetrics()`.
 
 ## Install
 
@@ -30,16 +33,7 @@ const user = await userLoader.load(userId)
 const users = await userLoader.loadMany([id1, id2, id3])
 ```
 
-**Zero-config mode:** Set environment variables and skip the agent config entirely:
-
-```bash
-export DL_API_KEY=your-key-here
-# DL_ENDPOINT defaults to https://api.dataloader-ai.com
-```
-
-```typescript
-const userLoader = new DataLoaderAI(batchLoadUsers, { name: 'user' })
-```
+If `DL_API_KEY` is set, telemetry is sent automatically. No other config needed.
 
 ## What it tracks
 
@@ -75,7 +69,7 @@ const userLoader = new DataLoaderAI(batchLoadUsers, { name: 'user' })
 | `DL_API_KEY` | API key for the dashboard (required for telemetry) |
 | `DL_ENDPOINT` | Override the ingest endpoint (default: `https://api.dataloader-ai.com`) |
 
-## Local metrics (no API key required)
+## Local metrics (no API key)
 
 Works without a key — telemetry stays local:
 
@@ -88,7 +82,7 @@ const loader = new DataLoaderAI(batchFn, {
 console.log(loader.getMetrics())
 ```
 
-**Want the hosted dashboard?** [Request a free beta API key →](https://dataloader-ai.com/#waitlist)
+**Want the hosted dashboard?** [Get a free API key →](https://dataloader-ai.com/#waitlist)
 
 ## Batch size change callback
 

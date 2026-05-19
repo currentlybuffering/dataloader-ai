@@ -49,7 +49,11 @@ export class MetricsAgent {
     if (config.enabled === false) return
 
     if (!this.apiKey) {
-      console.warn('[dataloader-ai] no API key configured — telemetry will not be sent. Set DL_API_KEY or pass agent.apiKey.')
+      console.warn(
+        '[dataloader-ai] no API key — running in local-only mode.\n' +
+        '  → Get a free key instantly: https://dataloader-ai.com/#waitlist\n' +
+        '  → Then set: DL_API_KEY=your-key  or  agent: { apiKey: \'...\' }'
+      )
       return
     }
 
