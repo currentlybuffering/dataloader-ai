@@ -54,6 +54,20 @@ export class MetricsAgent {
         '  → Get a free key instantly: https://dataloader-ai.com/#waitlist\n' +
         '  → Then set: DL_API_KEY=your-key  or  agent: { apiKey: \'...\' }'
       )
+      const nudgeInterval = 24 * 60 * 60 * 1000
+      const nudgeTimer = setInterval(() => {
+        if (this.destroyed) { clearInterval(nudgeTimer); return }
+        const events = this.cacheHits + this.cacheMisses
+        if (events > 0) {
+          console.info(
+            `[dataloader-ai] ${events.toLocaleString()} events tracked locally. ` +
+            `Connect a key to see them in your dashboard: https://dataloader-ai.com/#waitlist`
+          )
+        }
+      }, nudgeInterval)
+      if (typeof (nudgeTimer as NodeJS.Timeout).unref === 'function') {
+        (nudgeTimer as NodeJS.Timeout).unref()
+      }
       return
     }
 
