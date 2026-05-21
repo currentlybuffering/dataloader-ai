@@ -5,28 +5,21 @@ Working Apollo Server 4 app with dataloader-ai instrumentation.
 ## Run it
 
 ```bash
-# install deps
 npm install
-
-# run without API key (local metrics only)
 npm start
+```
 
-# run with API key (telemetry + dashboard)
+Metrics appear in your terminal every 5 seconds. No API key needed.
+
+## With cloud dashboard
+
+```bash
 DL_API_KEY=your-key npm start
 ```
 
-## What it does
-
-- Starts an Apollo Server at http://localhost:4000
-- Creates a `DataLoaderAI` wrapper around a user batch loader
-- Loads users through DataLoader in a GraphQL resolver
-- Tracks cache hits, misses, batch size, and latency
-- Recommends batch size changes based on observed latency
-- With `DL_API_KEY`, sends telemetry to your dashboard
-
 ## Try it
 
-Open http://localhost:4000 in your browser and run:
+Open http://localhost:4000 and run:
 
 ```graphql
 query {
@@ -39,20 +32,4 @@ query {
 }
 ```
 
-Run it a few times and watch the cache hit rate climb. Check metrics:
-
-```graphql
-query {
-  metrics {
-    loaderName
-    cacheHitRate
-    avgLatencyMs
-    currentBatchSize
-    recommendedBatchSize
-  }
-}
-```
-
-## Get a free API key
-
-https://dataloader-ai.com/#waitlist
+Run it a few times and watch the cache hit rate climb in your terminal.

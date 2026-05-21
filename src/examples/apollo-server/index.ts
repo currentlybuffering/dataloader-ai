@@ -58,13 +58,9 @@ function createContext() {
       targetLatencyMs: 30,
       minBatchSize: 1,
       maxBatchSize: 100,
-      onBatchSizeChange: (oldSize: number, newSize: number, reason: string) => {
-        console.log(`[dataloader-ai] user loader: ${oldSize} → ${newSize} (${reason})`)
-      },
     },
     agent: {
       apiKey: process.env.DL_API_KEY,
-      flushIntervalMs: 3000,
     },
   })
 
@@ -94,9 +90,7 @@ const { url } = await startStandaloneServer(server, {
 })
 
 console.log(`Apollo Server ready at ${url}`)
-console.log(`Try the query: { posts { title author { name } } }`)
-console.log(`Or check metrics: { metrics { loaderName cacheHitRate avgLatencyMs currentBatchSize recommendedBatchSize } }`)
+console.log(`Try: { posts { title author { name } } }`)
 if (!process.env.DL_API_KEY) {
-  console.log(`\nNo DL_API_KEY set — running in local-only mode.`)
-  console.log(`Get a free key: https://dataloader-ai.com/#waitlist`)
+  console.log(`Local mode — metrics in your terminal. Set DL_API_KEY for cloud dashboard.`)
 }
