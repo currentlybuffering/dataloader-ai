@@ -1,0 +1,17 @@
+{
+  "name": "dataloader-ai-example-ecommerce",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts",
+    "load-test": "tsx load-test.ts"
+  },
+  "dependencies": {
+    "@apollo/server": "^4.11.0",
+    "dataloader-ai": "^0.9.0",
+    "graphql": "^16.9.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.2"
+  }
+}
