@@ -1,6 +1,6 @@
 {
   "name": "dataloader-ai",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Telemetry and tuning for GraphQL DataLoaders",
   "homepage": "https://dataloader-ai.com",
   "main": "dist/cjs/index.js",

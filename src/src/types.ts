@@ -31,6 +31,12 @@ export interface AgentConfig {
   heartbeatIntervalMs?: number
 }
 
+export interface TerminalConfig {
+  enabled?: boolean
+  logIntervalMs?: number
+  color?: boolean
+}
+
 export interface OptimizerConfig {
   targetLatencyMs?: number
   minBatchSize?: number
@@ -42,5 +48,6 @@ export interface OptimizerConfig {
 export interface DataLoaderAIOptions {
   name?: string
   agent?: AgentConfig
+  terminal?: TerminalConfig
   optimizer?: OptimizerConfig
 }

@@ -1,17 +1,24 @@
 import DataLoader from 'dataloader'
 import { MetricsAgent } from './agent'
 import { BatchSizeOptimizer } from './optimizer'
+import { TerminalReporter } from './terminal'
 import { DataLoaderAIOptions, MetricsSummary } from './types'
 
 export { MetricsAgent } from './agent'
 export { BatchSizeOptimizer } from './optimizer'
+export { TerminalReporter } from './terminal'
 export type {
   AgentConfig,
   OptimizerConfig,
+  TerminalConfig,
   DataLoaderAIOptions,
   MetricsSummary,
   TelemetryEvent,
 } from './types'
+
+const _registry: DataLoaderAI<any, any, any>[] = []
+let _sharedTerminal: TerminalReporter | null = null
+let _terminalRefCount = 0
 
 class DataLoaderAI<K, V, C = K> {
   private readonly _loader: DataLoader<K, V, C>
@@ -40,6 +47,19 @@ class DataLoaderAI<K, V, C = K> {
     })
     const agentConfig = options?.agent
     this._agent = agentConfig && agentConfig.enabled !== false ? new MetricsAgent(agentConfig) : null
+
+    const terminalConfig = options?.terminal
+    const terminalEnabled = terminalConfig?.enabled !== false
+    if (terminalEnabled) {
+      _terminalRefCount++
+      if (!_sharedTerminal) {
+        _sharedTerminal = new TerminalReporter(
+          () => _registry.map(l => l.getMetrics()),
+          terminalConfig ?? {}
+        )
+        _sharedTerminal.start()
+      }
+    }
 
     const optimizer = this._optimizer
     const agent = this._agent
@@ -99,6 +119,8 @@ class DataLoaderAI<K, V, C = K> {
       maxBatchSize: this._optimizer.getBatchSize(),
     })
     loaderRef.current = this._loader
+
+    _registry.push(this)
   }
 
   load(key: K): Promise<V> {
@@ -158,6 +180,14 @@ class DataLoaderAI<K, V, C = K> {
 
   destroy(): void {
     this._agent?.destroy()
+    _terminalRefCount--
+    if (_terminalRefCount <= 0 && _sharedTerminal) {
+      _sharedTerminal.destroy()
+      _sharedTerminal = null
+      _terminalRefCount = 0
+    }
+    const idx = _registry.indexOf(this)
+    if (idx >= 0) _registry.splice(idx, 1)
   }
 }
 

@@ -3,16 +3,7 @@
 Telemetry and tuning for GraphQL DataLoaders.
 A drop-in wrapper for the `dataloader` npm package.
 
-## Get your free API key
-
-**Get a key instantly — no waiting:** [dataloader-ai.com/#waitlist](https://dataloader-ai.com/#waitlist)
-
-```bash
-export DL_API_KEY=your-key-here
-```
-
-With a key you get: hosted dashboard, live telemetry, batch-size recommendations, cost savings tracking.
-Without a key: local metrics only via `loader.getMetrics()`.
+Works out of the box — no API key, no account, no data leaves your machine.
 
 ## Install
 
@@ -30,10 +21,35 @@ const userLoader = new DataLoaderAI(batchLoadUsers, {
 })
 
 const user = await userLoader.load(userId)
-const users = await userLoader.loadMany([id1, id2, id3])
 ```
 
-If `DL_API_KEY` is set, telemetry is sent automatically. No other config needed.
+That's it. You'll see live metrics in your terminal every 5 seconds:
+
+```
+▲ dataloader-ai 14:23:01
+──────────────────────────────────────────────────
+user
+  cache [████████████░░░░░░░░░░░░░] 48.2%
+  avg=12.4ms p95=18.1ms batched=184 avoided=42 savings=$0.0042
+  batch efficiency ▄▄█▄█▄█▄█▄█▄▄
+  recommendation ↑ increase 10 → 12
+
+──────────────────────────────────────────────────
+```
+
+No API key required. No account needed. No data sent anywhere.
+
+## Cloud dashboard (optional)
+
+Want a hosted dashboard with historical trends and alerts?
+
+```bash
+export DL_API_KEY=your-key-here
+```
+
+Get a free key: [dataloader-ai.com](https://dataloader-ai.com/#waitlist)
+
+With a key, telemetry is sent to your dashboard automatically. Terminal output continues either way.
 
 ## What it tracks
 
@@ -47,8 +63,11 @@ If `DL_API_KEY` is set, telemetry is sent automatically. No other config needed.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `name` | string | `'default'` | Loader name shown in dashboard |
-| `agent.enabled` | boolean | `true` | Set `false` to disable telemetry export |
+| `name` | string | `'default'` | Loader name shown in terminal and dashboard |
+| `terminal.enabled` | boolean | `true` | Set `false` to disable terminal output |
+| `terminal.logIntervalMs` | number | `5000` | How often to print metrics to terminal |
+| `terminal.color` | boolean | `true` | ANSI color output |
+| `agent.enabled` | boolean | `true` | Set `false` to disable cloud telemetry |
 | `agent.endpoint` | string | `https://api.dataloader-ai.com` | Dashboard API ingest URL |
 | `agent.apiKey` | string | `DL_API_KEY` env | Your API key |
 | `agent.flushIntervalMs` | number | `5000` | How often to flush buffered events |
@@ -66,23 +85,18 @@ If `DL_API_KEY` is set, telemetry is sent automatically. No other config needed.
 
 | Variable | Description |
 |----------|-------------|
-| `DL_API_KEY` | API key for the dashboard (required for telemetry) |
+| `DL_API_KEY` | API key for the cloud dashboard (optional) |
 | `DL_ENDPOINT` | Override the ingest endpoint (default: `https://api.dataloader-ai.com`) |
+| `DL_ENV` | Set to `development` or `test` to skip heartbeats |
 
-## Local metrics (no API key)
-
-Works without a key — telemetry stays local:
+## Disable terminal output
 
 ```typescript
 const loader = new DataLoaderAI(batchFn, {
   name: 'user',
-  agent: { enabled: false },
+  terminal: { enabled: false },
 })
-
-console.log(loader.getMetrics())
 ```
-
-**Want the hosted dashboard?** [Get a free API key →](https://dataloader-ai.com/#waitlist)
 
 ## Batch size change callback
 
@@ -97,19 +111,16 @@ const loader = new DataLoaderAI(batchFn, {
 })
 ```
 
+## Programmatic metrics
+
+```typescript
+const metrics = loader.getMetrics()
+console.log(metrics.cacheHitRate, metrics.avgLatencyMs)
+```
+
 ## Apollo Server example
 
-See [`examples/apollo-server.ts`](./examples/apollo-server.ts).
-
-## Current behavior
-
-- works as a drop-in wrapper around `dataloader`
-- sends `batch`, `cache_hit`, and `cache_miss` telemetry to the ingest API
-- surfaces batch-size recommendations through the API and local metrics
-- retries failed flushes with exponential backoff (3 attempts)
-- flushes remaining events on SIGTERM/SIGINT
-- sends periodic heartbeats so the admin dashboard shows active connections
-- applies recommended batch size on next process restart, not live in-process
+See [`examples/apollo-server/`](./examples/apollo-server/).
 
 ## Architecture
 
@@ -121,13 +132,11 @@ DataLoaderAI (this package)
 ├── wraps batch fn → records latency
 ├── instrumented cache map → records cache hits/misses
 ├── BatchSizeOptimizer → recommends batch-size changes
-└── MetricsAgent → buffers + flushes events to dashboard API
+├── TerminalReporter → prints metrics to stdout (always)
+└── MetricsAgent → flushes events to cloud API (if key set)
 │
-▼ POST /ingest
-dataloader-ai dashboard API (FastAPI)
-│
-▼
-/metrics, /optimizer/recommendation, /cache/stats
+▼ (optional) POST /ingest
+dataloader-ai dashboard API
 ```
 
 ## License

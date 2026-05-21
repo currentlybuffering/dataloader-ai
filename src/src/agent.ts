@@ -48,28 +48,7 @@ export class MetricsAgent {
 
     if (config.enabled === false) return
 
-    if (!this.apiKey) {
-      console.warn(
-        '[dataloader-ai] no API key — running in local-only mode.\n' +
-        '  → Get a free key instantly: https://dataloader-ai.com/#waitlist\n' +
-        '  → Then set: DL_API_KEY=your-key  or  agent: { apiKey: \'...\' }'
-      )
-      const nudgeInterval = 24 * 60 * 60 * 1000
-      const nudgeTimer = setInterval(() => {
-        if (this.destroyed) { clearInterval(nudgeTimer); return }
-        const events = this.cacheHits + this.cacheMisses
-        if (events > 0) {
-          console.info(
-            `[dataloader-ai] ${events.toLocaleString()} events tracked locally. ` +
-            `Connect a key to see them in your dashboard: https://dataloader-ai.com/#waitlist`
-          )
-        }
-      }, nudgeInterval)
-      if (typeof (nudgeTimer as NodeJS.Timeout).unref === 'function') {
-        (nudgeTimer as NodeJS.Timeout).unref()
-      }
-      return
-    }
+    if (!this.apiKey) return
 
     const interval = config.flushIntervalMs ?? DEFAULT_FLUSH_MS
     this.flushTimer = setInterval(() => void this.flush(), interval)
@@ -77,16 +56,16 @@ export class MetricsAgent {
       (this.flushTimer as NodeJS.Timeout).unref()
     }
 
-  const hbInterval = config.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_MS
-  this.heartbeatTimer = setInterval(() => void this._heartbeat(), hbInterval)
-  if (this.heartbeatTimer && typeof (this.heartbeatTimer as NodeJS.Timeout).unref === 'function') {
-    (this.heartbeatTimer as NodeJS.Timeout).unref()
-  }
+    const hbInterval = config.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_MS
+    this.heartbeatTimer = setInterval(() => void this._heartbeat(), hbInterval)
+    if (this.heartbeatTimer && typeof (this.heartbeatTimer as NodeJS.Timeout).unref === 'function') {
+      (this.heartbeatTimer as NodeJS.Timeout).unref()
+    }
 
-  const dlEnv = _env('DL_ENV')
-  if (dlEnv !== 'development' && dlEnv !== 'test') {
-    setTimeout(() => void this._heartbeat(), hbInterval)
-  }
+    const dlEnv = _env('DL_ENV')
+    if (dlEnv !== 'development' && dlEnv !== 'test') {
+      setTimeout(() => void this._heartbeat(), hbInterval)
+    }
 
     if (typeof process !== 'undefined' && typeof process.on === 'function') {
       const shutdown = () => { this.destroy() }
@@ -199,24 +178,24 @@ export class MetricsAgent {
           signal: controller?.signal,
         })
 
-      if (timeout) clearTimeout(timeout)
+        if (timeout) clearTimeout(timeout)
 
-      if (res.ok || res.status === 202) {
-        this.flushing = false
-        return
-      }
-      if (res.status >= 400 && res.status < 500) {
-        this.flushing = false
-        return
-      }
-    } catch {
-      if (attempt < this.maxRetries) {
-        await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)))
-        continue
+        if (res.ok || res.status === 202) {
+          this.flushing = false
+          return
+        }
+        if (res.status >= 400 && res.status < 500) {
+          this.flushing = false
+          return
+        }
+      } catch {
+        if (attempt < this.maxRetries) {
+          await new Promise(r => setTimeout(r, RETRY_BASE_DELAY_MS * (attempt + 1)))
+          continue
+        }
       }
     }
-  }
 
-  this.flushing = false
+    this.flushing = false
   }
 }
