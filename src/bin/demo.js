@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 
 const args = process.argv.slice(2)
-if (args[0] !== 'demo') {
+const sub = args[0]
+if (sub === 'help' || sub === '--help' || sub === '-h') {
   console.log('dataloader-ai CLI')
   console.log('')
   console.log('Usage:')
-  console.log('  npx dataloader-ai demo    Run a live demo with simulated loaders')
+  console.log('  npx dataloader-ai          Run a live demo with simulated loaders')
+  console.log('  npx dataloader-ai demo     (same as above)')
   console.log('')
   console.log('In your app:')
   console.log('  import { DataLoaderAI } from "dataloader-ai"')
