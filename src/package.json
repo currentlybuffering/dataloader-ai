@@ -3,6 +3,13 @@
   "version": "0.9.1",
   "description": "Telemetry and tuning for GraphQL DataLoaders",
   "homepage": "https://dataloader-ai.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/currentlybuffering/dataloader-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/currentlybuffering/dataloader-ai/issues"
+  },
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -37,7 +44,12 @@
     "batching",
     "performance",
     "ai",
-    "apollo"
+    "apollo",
+    "observability",
+    "telemetry",
+    "monitoring",
+    "cache",
+    "n+1"
   ],
   "license": "MIT",
   "devDependencies": {

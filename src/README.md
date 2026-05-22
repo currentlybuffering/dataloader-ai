@@ -41,7 +41,7 @@ No API key required. No account needed. No data sent anywhere.
 
 ## Cloud dashboard (optional)
 
-Want a hosted dashboard with historical trends and alerts?
+Want a hosted dashboard with AI-powered insights?
 
 ```bash
 export DL_API_KEY=your-key-here
@@ -49,7 +49,16 @@ export DL_API_KEY=your-key-here
 
 Get a free key: [dataloader-ai.com](https://dataloader-ai.com/#waitlist)
 
-With a key, telemetry is sent to your dashboard automatically. Terminal output continues either way.
+With a key, telemetry is sent to your dashboard automatically. The dashboard includes:
+
+- Real-time loader metrics with 5s auto-refresh
+- Per-loader cache hit rates, latency breakdowns, and batch efficiency
+- AI Insights — actionable analysis of your DataLoader performance, powered by piko
+- Batch size recommendations with one-click apply
+
+Dashboard: [api.dataloader-ai.com/dashboard](https://api.dataloader-ai.com/dashboard)
+
+Terminal output continues either way.
 
 ## What it tracks
 
